@@ -53,10 +53,10 @@ public class UserHelpers
         };
 
         // Add cookies with Partitioned attribute using raw header
-        var cookieHeader = $"jwt={token}; HttpOnly; Secure; SameSite=None; Partitioned; Expires={cookieOptions.Expires.Value.ToUniversalTime():R}";
+        var cookieHeader = $"jwt={token}; HttpOnly; Secure; SameSite=None; Partitioned; Path=/; Expires={cookieOptions.Expires.Value.ToUniversalTime():R}";
         response.Headers.Append("Set-Cookie", cookieHeader);
 
-        var userIdCookieHeader = $"userId={user.UserId}; HttpOnly; Secure; SameSite=None; Partitioned; Expires={cookieOptions.Expires.Value.ToUniversalTime():R}";
+        var userIdCookieHeader = $"userId={user.UserId}; HttpOnly; Secure; SameSite=None; Partitioned; Path=/; Expires={cookieOptions.Expires.Value.ToUniversalTime():R}";
         response.Headers.Append("Set-Cookie", userIdCookieHeader);
     }
 }
