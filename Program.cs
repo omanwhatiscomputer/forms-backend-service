@@ -23,7 +23,7 @@ builder.Services.AddCors(options =>
             builder.WithOrigins("https://forms-frontend-psi.vercel.app")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
-                .AllowCredentials(); ;
+                .AllowCredentials();
         });
 });
 builder.Services.AddAuthentication(x =>
