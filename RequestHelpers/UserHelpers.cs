@@ -22,7 +22,7 @@ public class UserHelpers
         return token;
     }
 
-    
+
 
     public static void AppendCookies(HttpResponse response, IConfiguration config, User user, string token)
     {
@@ -32,7 +32,7 @@ public class UserHelpers
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             Expires = DateTime.UtcNow.AddHours(cookieLifetime)
         });
 
@@ -40,7 +40,7 @@ public class UserHelpers
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = SameSiteMode.None,
             Expires = DateTime.UtcNow.AddHours(cookieLifetime)
         });
     }
