@@ -58,7 +58,7 @@ public class MappingProfiles : Profile
             opts.MapFrom((src, dest) => src.BlockType != null ? (InputType)Enum.Parse(typeof(InputType), src.BlockType) : dest.BlockType);
         });
         CreateMap<BlockResponse, BlockResponse_DTO>().ForMember(dest => dest.BlockType, opts => opts.MapFrom(src => src.BlockType.ToString())); ;
-        CreateMap<FormResponseObject, FormResponseObject_DTO>();
+        CreateMap<FormResponseObject, FormResponseObject_DTO>().ForMember(fro => fro.Title, opt => opt.MapFrom(src => src.ParentTemplate.Title));
         CreateMap<CreateFormResponseObject_DTO, FormResponseObject>();
         CreateMap<UpdateFormResponseObject_DTO, FormResponseObject>();
 

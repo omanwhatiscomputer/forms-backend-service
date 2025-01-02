@@ -178,12 +178,11 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
         return Ok(mapper.Map<FormTemplate_DTO>(formTemplate));
 
     }
+
     [HttpGet("all")]
     public async Task<ActionResult<List<FormTemplateIndex_DTO>>> GetAllFormTemplates()
     {
-        var users = await dbContextWrapper.Context.FormTemplates.ProjectTo<FormTemplateIndex_DTO>(mapper.ConfigurationProvider).ToListAsync();
-        return Ok(users);
+        var fts = await dbContextWrapper.Context.FormTemplates.ProjectTo<FormTemplateIndex_DTO>(mapper.ConfigurationProvider).ToListAsync();
+        return Ok(fts);
     }
-
-    // getFormTemplate
 }
