@@ -34,7 +34,6 @@ public class UserHelpers
             Secure = true,
             SameSite = SameSiteMode.None,
             Expires = DateTime.UtcNow.AddHours(cookieLifetime),
-            Domain = "https://forms-frontend-psi.vercel.app",
         });
 
         response.Cookies.Append("userId", user.UserId.ToString(), new CookieOptions
@@ -43,7 +42,6 @@ public class UserHelpers
             Secure = true,
             SameSite = SameSiteMode.None,
             Expires = DateTime.UtcNow.AddHours(cookieLifetime),
-            Domain = "https://forms-frontend-psi.vercel.app",
         });
     }
 }
