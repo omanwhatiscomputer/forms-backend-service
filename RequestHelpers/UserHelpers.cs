@@ -26,22 +26,37 @@ public class UserHelpers
 
     public static void AppendCookies(HttpResponse response, IConfiguration config, User user, string token)
     {
+        // double cookieLifetime = Convert.ToDouble(config["CookieLifetimeInHours"]);
+
+        // response.Cookies.Append("jwt", token, new CookieOptions
+        // {
+        //     HttpOnly = true,
+        //     Secure = true,
+        //     SameSite = SameSiteMode.None,
+        //     Expires = DateTime.UtcNow.AddHours(cookieLifetime),
+        // });
+
+        // response.Cookies.Append("userId", user.UserId.ToString(), new CookieOptions
+        // {
+        //     HttpOnly = true,
+        //     Secure = true,
+        //     SameSite = SameSiteMode.None,
+        //     Expires = DateTime.UtcNow.AddHours(cookieLifetime),
+        // });
         double cookieLifetime = Convert.ToDouble(config["CookieLifetimeInHours"]);
-
-        response.Cookies.Append("jwt", token, new CookieOptions
+        var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
             SameSite = SameSiteMode.None,
-            Expires = DateTime.UtcNow.AddHours(cookieLifetime),
-        });
+            Expires = DateTime.UtcNow.AddHours(cookieLifetime)
+        };
 
-        response.Cookies.Append("userId", user.UserId.ToString(), new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.None,
-            Expires = DateTime.UtcNow.AddHours(cookieLifetime),
-        });
+        // Add cookies with Partitioned attribute using raw header
+        var cookieHeader = $"jwt={token}; HttpOnly; Secure; SameSite=None; Partitioned; Expires={cookieOptions.Expires.Value.ToUniversalTime():R}";
+        response.Headers.Append("Set-Cookie", cookieHeader);
+
+        var userIdCookieHeader = $"userId={user.UserId}; HttpOnly; Secure; SameSite=None; Partitioned; Expires={cookieOptions.Expires.Value.ToUniversalTime():R}";
+        response.Headers.Append("Set-Cookie", userIdCookieHeader);
     }
 }
