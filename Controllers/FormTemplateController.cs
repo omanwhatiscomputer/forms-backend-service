@@ -98,69 +98,69 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
         formTemplate.AccessControl = (Access)Enum.Parse(typeof(Access), updateFT_dto.AccessControl);
 
 
-        if (formTemplate.Tags.Count > 0)
-        {
-            dbContextWrapper.Context.FormTags.RemoveRange(formTemplate.Tags);
-            await dbContextWrapper.Context.SaveChangesAsync();
-            // await dbContextWrapper.Context.Entry(formTemplate).Collection(ft => ft.Tags).LoadAsync();
-        }
+        // if (formTemplate.Tags.Count > 0)
+        // {
+        //     dbContextWrapper.Context.FormTags.RemoveRange(formTemplate.Tags);
+        //     await dbContextWrapper.Context.SaveChangesAsync();
+
+        // }
         if (updateFT_dto.Tags.Count() > 0)
         {
             formTemplate.Tags = mapper.Map<List<FormTemplateTag>>(updateFT_dto.Tags);
-            await dbContextWrapper.Context.SaveChangesAsync();
-            // await dbContextWrapper.Context.Entry(formTemplate).Collection(ft => ft.Tags).LoadAsync();
+            // await dbContextWrapper.Context.SaveChangesAsync();
+
         }
 
 
-        if (formTemplate.AuthorizedUsers.Count > 0)
-        {
-            dbContextWrapper.Context.AuthorizedUsers.RemoveRange(formTemplate.AuthorizedUsers);
-            await dbContextWrapper.Context.SaveChangesAsync();
-            // await dbContextWrapper.Context.Entry(formTemplate).Collection(ft => ft.AuthorizedUsers).LoadAsync();
-        }
+        // if (formTemplate.AuthorizedUsers.Count > 0)
+        // {
+        //     dbContextWrapper.Context.AuthorizedUsers.RemoveRange(formTemplate.AuthorizedUsers);
+        //     await dbContextWrapper.Context.SaveChangesAsync();
+
+        // }
         if (updateFT_dto.AuthorizedUsers.Count() > 0)
         {
             formTemplate.AuthorizedUsers = mapper.Map<List<AuthorizedUser>>(updateFT_dto.AuthorizedUsers);
-            await dbContextWrapper.Context.SaveChangesAsync();
-            // await dbContextWrapper.Context.Entry(formTemplate).Collection(ft => ft.AuthorizedUsers).LoadAsync();
+            // await dbContextWrapper.Context.SaveChangesAsync();
+
         }
 
 
 
 
-        // Identify deleted blocks
-        var updatedBlockIds = updateFT_dto.Blocks.Select(b => b.Id).ToHashSet();
-        var deletedBlocks = formTemplate.Blocks.Where(b => !updatedBlockIds.Contains(b.Id)).ToList();
-        if (deletedBlocks.Count > 0)
-        {
-            dbContextWrapper.Context.Blocks.RemoveRange(deletedBlocks);
-            await dbContextWrapper.Context.SaveChangesAsync();
-        }
 
-        // Update or add blocks
+        // var updatedBlockIds = updateFT_dto.Blocks.Select(b => b.Id).ToHashSet();
+        // var deletedBlocks = formTemplate.Blocks.Where(b => !updatedBlockIds.Contains(b.Id)).ToList();
+        // if (deletedBlocks.Count > 0)
+        // {
+        //     dbContextWrapper.Context.Blocks.RemoveRange(deletedBlocks);
+        //     await dbContextWrapper.Context.SaveChangesAsync();
+        // }
+
+
         foreach (var blockDto in updateFT_dto.Blocks)
         {
             var existingBlock = formTemplate.Blocks.FirstOrDefault(b => b.Id == blockDto.Id);
             if (existingBlock != null)
             {
-                // Update existing block
+
                 existingBlock.Title = blockDto.Title ?? existingBlock.Title;
                 existingBlock.Description = blockDto.Description ?? existingBlock.Description;
                 existingBlock.IsRequired = blockDto.IsRequired;
 
                 // Update question groups
-                dbContextWrapper.Context.Questions.RemoveRange(existingBlock.QuestionGroup);
-                await dbContextWrapper.Context.SaveChangesAsync();
+                // dbContextWrapper.Context.Questions.RemoveRange(existingBlock.QuestionGroup);
+                // await dbContextWrapper.Context.SaveChangesAsync();
                 var newQuestionGroups = mapper.Map<List<Question>>(blockDto.QuestionGroup);
                 existingBlock.QuestionGroup = newQuestionGroups;
-                await dbContextWrapper.Context.SaveChangesAsync();
+                // await dbContextWrapper.Context.SaveChangesAsync();
 
                 // Update checkbox options
-                dbContextWrapper.Context.CheckboxOptions.RemoveRange(existingBlock.CheckboxOptions);
-                await dbContextWrapper.Context.SaveChangesAsync();
+                // dbContextWrapper.Context.CheckboxOptions.RemoveRange(existingBlock.CheckboxOptions);
+                // await dbContextWrapper.Context.SaveChangesAsync();
                 var newOptions = mapper.Map<List<CheckboxOption>>(blockDto.CheckboxOptions);
                 existingBlock.CheckboxOptions = newOptions;
-                await dbContextWrapper.Context.SaveChangesAsync();
+                // await dbContextWrapper.Context.SaveChangesAsync();
             }
             else
             {
