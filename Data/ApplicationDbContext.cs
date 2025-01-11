@@ -30,7 +30,9 @@ public class ApplicationDbContext(DbContextOptions options) : DbContext(options)
             .HasIndex(u => u.UserId)
             .IsUnique();
 
-
+        modelBuilder.Entity<FormTemplate>()
+            .Property(ft => ft.RowVersion)
+            .IsRowVersion();
 
         modelBuilder.Entity<User>().HasMany(u => u.FormTemplates).WithOne(f => f.Author).HasForeignKey(f => f.AuthorId);
         modelBuilder.Entity<User>().HasMany(u => u.FormsRespondedTo).WithOne(r => r.Respondent).HasForeignKey(r => new { r.RespondentId, r.ParentTemplateId });

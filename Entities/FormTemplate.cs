@@ -25,5 +25,5 @@ public class FormTemplate
     [Required]
     public List<Block> Blocks { get; set; } = new List<Block>();
 
-
+    public byte[] RowVersion { get; set; }
 }

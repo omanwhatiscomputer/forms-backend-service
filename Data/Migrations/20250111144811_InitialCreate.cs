@@ -56,7 +56,8 @@ namespace BackendService.Data.Migrations
                     Description = table.Column<string>(type: "text", nullable: true),
                     BannerUrl = table.Column<string>(type: "text", nullable: true),
                     TopicId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TopicName = table.Column<string>(type: "text", nullable: true)
+                    TopicName = table.Column<string>(type: "text", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {

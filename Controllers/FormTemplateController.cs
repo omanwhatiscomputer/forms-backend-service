@@ -98,44 +98,40 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
         formTemplate.AccessControl = (Access)Enum.Parse(typeof(Access), updateFT_dto.AccessControl);
 
 
-        // if (formTemplate.Tags.Count > 0)
-        // {
-        //     dbContextWrapper.Context.FormTags.RemoveRange(formTemplate.Tags);
-        //     await dbContextWrapper.Context.SaveChangesAsync();
+        if (formTemplate.Tags.Count > 0)
+        {
+            dbContextWrapper.Context.FormTags.RemoveRange(formTemplate.Tags);
+            await dbContextWrapper.Context.SaveChangesAsync();
 
-        // }
+        }
         if (updateFT_dto.Tags.Count() > 0)
         {
             formTemplate.Tags = mapper.Map<List<FormTemplateTag>>(updateFT_dto.Tags);
-            // await dbContextWrapper.Context.SaveChangesAsync();
+            await dbContextWrapper.Context.SaveChangesAsync();
 
         }
 
 
-        // if (formTemplate.AuthorizedUsers.Count > 0)
-        // {
-        //     dbContextWrapper.Context.AuthorizedUsers.RemoveRange(formTemplate.AuthorizedUsers);
-        //     await dbContextWrapper.Context.SaveChangesAsync();
+        if (formTemplate.AuthorizedUsers.Count > 0)
+        {
+            dbContextWrapper.Context.AuthorizedUsers.RemoveRange(formTemplate.AuthorizedUsers);
+            await dbContextWrapper.Context.SaveChangesAsync();
 
-        // }
+        }
         if (updateFT_dto.AuthorizedUsers.Count() > 0)
         {
             formTemplate.AuthorizedUsers = mapper.Map<List<AuthorizedUser>>(updateFT_dto.AuthorizedUsers);
-            // await dbContextWrapper.Context.SaveChangesAsync();
+            await dbContextWrapper.Context.SaveChangesAsync();
 
         }
 
-
-
-
-
-        // var updatedBlockIds = updateFT_dto.Blocks.Select(b => b.Id).ToHashSet();
-        // var deletedBlocks = formTemplate.Blocks.Where(b => !updatedBlockIds.Contains(b.Id)).ToList();
-        // if (deletedBlocks.Count > 0)
-        // {
-        //     dbContextWrapper.Context.Blocks.RemoveRange(deletedBlocks);
-        //     await dbContextWrapper.Context.SaveChangesAsync();
-        // }
+        var updatedBlockIds = updateFT_dto.Blocks.Select(b => b.Id).ToHashSet();
+        var deletedBlocks = formTemplate.Blocks.Where(b => !updatedBlockIds.Contains(b.Id)).ToList();
+        if (deletedBlocks.Count > 0)
+        {
+            dbContextWrapper.Context.Blocks.RemoveRange(deletedBlocks);
+            await dbContextWrapper.Context.SaveChangesAsync();
+        }
 
 
         foreach (var blockDto in updateFT_dto.Blocks)
@@ -149,18 +145,18 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
                 existingBlock.IsRequired = blockDto.IsRequired;
 
                 // Update question groups
-                // dbContextWrapper.Context.Questions.RemoveRange(existingBlock.QuestionGroup);
-                // await dbContextWrapper.Context.SaveChangesAsync();
+                dbContextWrapper.Context.Questions.RemoveRange(existingBlock.QuestionGroup);
+                await dbContextWrapper.Context.SaveChangesAsync();
                 var newQuestionGroups = mapper.Map<List<Question>>(blockDto.QuestionGroup);
                 existingBlock.QuestionGroup = newQuestionGroups;
-                // await dbContextWrapper.Context.SaveChangesAsync();
+                await dbContextWrapper.Context.SaveChangesAsync();
 
                 // Update checkbox options
-                // dbContextWrapper.Context.CheckboxOptions.RemoveRange(existingBlock.CheckboxOptions);
-                // await dbContextWrapper.Context.SaveChangesAsync();
+                dbContextWrapper.Context.CheckboxOptions.RemoveRange(existingBlock.CheckboxOptions);
+                await dbContextWrapper.Context.SaveChangesAsync();
                 var newOptions = mapper.Map<List<CheckboxOption>>(blockDto.CheckboxOptions);
                 existingBlock.CheckboxOptions = newOptions;
-                // await dbContextWrapper.Context.SaveChangesAsync();
+                await dbContextWrapper.Context.SaveChangesAsync();
             }
             else
             {
@@ -170,12 +166,14 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
             }
         }
 
+
         var (statusCode, message) = await dbContextWrapper.SaveChangesAsync();
         if (statusCode != 201)
         {
             return StatusCode(statusCode, message);
         }
         return Ok(mapper.Map<FormTemplate_DTO>(formTemplate));
+
 
     }
 

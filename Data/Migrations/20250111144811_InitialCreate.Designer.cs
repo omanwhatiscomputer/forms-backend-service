@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BackendService.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250102130022_InitialCreate")]
+    [Migration("20250111144811_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -221,6 +221,11 @@ namespace BackendService.Data.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea");
 
                     b.Property<string>("Title")
                         .HasColumnType("text");
