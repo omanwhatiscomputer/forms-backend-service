@@ -101,13 +101,13 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
         if (formTemplate.Tags.Count > 0)
         {
             dbContextWrapper.Context.FormTags.RemoveRange(formTemplate.Tags);
-            await dbContextWrapper.Context.SaveChangesAsync();
+            // await dbContextWrapper.Context.SaveChangesAsync();
 
         }
         if (updateFT_dto.Tags.Count() > 0)
         {
             formTemplate.Tags = mapper.Map<List<FormTemplateTag>>(updateFT_dto.Tags);
-            await dbContextWrapper.Context.SaveChangesAsync();
+            // await dbContextWrapper.Context.SaveChangesAsync();
 
         }
 
@@ -115,13 +115,13 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
         if (formTemplate.AuthorizedUsers.Count > 0)
         {
             dbContextWrapper.Context.AuthorizedUsers.RemoveRange(formTemplate.AuthorizedUsers);
-            await dbContextWrapper.Context.SaveChangesAsync();
+            // await dbContextWrapper.Context.SaveChangesAsync();
 
         }
         if (updateFT_dto.AuthorizedUsers.Count() > 0)
         {
             formTemplate.AuthorizedUsers = mapper.Map<List<AuthorizedUser>>(updateFT_dto.AuthorizedUsers);
-            await dbContextWrapper.Context.SaveChangesAsync();
+            // await dbContextWrapper.Context.SaveChangesAsync();
 
         }
 
@@ -130,7 +130,7 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
         if (deletedBlocks.Count > 0)
         {
             dbContextWrapper.Context.Blocks.RemoveRange(deletedBlocks);
-            await dbContextWrapper.Context.SaveChangesAsync();
+            // await dbContextWrapper.Context.SaveChangesAsync();
         }
 
 
@@ -146,17 +146,17 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
 
                 // Update question groups
                 dbContextWrapper.Context.Questions.RemoveRange(existingBlock.QuestionGroup);
-                await dbContextWrapper.Context.SaveChangesAsync();
+                // await dbContextWrapper.Context.SaveChangesAsync();
                 var newQuestionGroups = mapper.Map<List<Question>>(blockDto.QuestionGroup);
                 existingBlock.QuestionGroup = newQuestionGroups;
-                await dbContextWrapper.Context.SaveChangesAsync();
+                // await dbContextWrapper.Context.SaveChangesAsync();
 
                 // Update checkbox options
                 dbContextWrapper.Context.CheckboxOptions.RemoveRange(existingBlock.CheckboxOptions);
-                await dbContextWrapper.Context.SaveChangesAsync();
+                // await dbContextWrapper.Context.SaveChangesAsync();
                 var newOptions = mapper.Map<List<CheckboxOption>>(blockDto.CheckboxOptions);
                 existingBlock.CheckboxOptions = newOptions;
-                await dbContextWrapper.Context.SaveChangesAsync();
+                // await dbContextWrapper.Context.SaveChangesAsync();
             }
             else
             {
