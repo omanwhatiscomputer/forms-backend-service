@@ -29,6 +29,7 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
 
         if (formTemplate == null) return NotFound();
 
+
         var topic = await dbContextWrapper.Context.Topics.FirstOrDefaultAsync(t => t.Id == formTemplate.TopicId);
 
 
@@ -86,6 +87,8 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
         {
             return NotFound($"FormTemplate with ID {id} not found.");
         }
+
+        dbContextWrapper.Context.Entry(formTemplate).State = EntityState.Modified;
 
         var topic = await dbContextWrapper.Context.Topics.FirstOrDefaultAsync(t => t.TopicName == updateFT_dto.Topic);
 
