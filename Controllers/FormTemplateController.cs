@@ -93,7 +93,6 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
             }
 
             var topic = await dbContextWrapper.Context.Topics
-                // .AsNoTracking()
                 .FirstOrDefaultAsync(t => t.TopicName == updateFT_dto.Topic);
 
             if (topic == null)
@@ -152,6 +151,7 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
                     block.Title = blockDto.Title ?? block.Title;
                     block.Description = blockDto.Description ?? block.Description;
                     block.IsRequired = blockDto.IsRequired;
+                    block.Index = blockDto.Index;
 
                     // Update questions and options
                     var existingQuestions = await dbContextWrapper.Context.Questions
