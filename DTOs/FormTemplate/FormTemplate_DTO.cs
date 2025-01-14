@@ -15,7 +15,7 @@ public class FormTemplate_DTO
     public string BannerUrl { get; set; }
     public Topic_DTO Topic { get; set; }
     public List<Like_DTO> Likes { get; } = [];
-    public ICollection<FormTemplateTag_DTO> Tags { get; set; } = new List<FormTemplateTag_DTO>();
+    public List<FormTemplateTag_DTO> Tags { get; set; } = new List<FormTemplateTag_DTO>();
     public List<Comment_DTO> Comments { get; set; } = [];
     public ICollection<FormResponseObject_DTO> Responses { get; set; } = [];
     public List<Block_DTO> Blocks { get; set; }

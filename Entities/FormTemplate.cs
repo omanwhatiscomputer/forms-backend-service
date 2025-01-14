@@ -19,7 +19,7 @@ public class FormTemplate
     public Guid TopicId { get; set; }
     public Topic Topic { get; set; } = null!;
     public List<Like> Likes { get; set; } = [];
-    public ICollection<FormTemplateTag> Tags { get; set; } = new List<FormTemplateTag>();
+    public List<FormTemplateTag> Tags { get; set; } = new List<FormTemplateTag>();
     public ICollection<FormResponseObject> Responses { get; set; } = [];
     public List<Comment> Comments { get; set; } = [];
     [Required]

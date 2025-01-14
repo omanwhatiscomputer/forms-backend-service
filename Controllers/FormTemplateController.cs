@@ -42,6 +42,8 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
     [HttpPost]
     public async Task<ActionResult<FormTemplate_DTO>> RegisterFormTemplateWithUserId(CreateFormTemplate_DTO createFT_dto)
     {
+        dbContextWrapper.Context.ChangeTracker.Clear();
+
         var user = await dbContextWrapper.Context.Users.FirstOrDefaultAsync(x => x.UserId == createFT_dto.AuthorId);
         if (user == null) return NotFound();
 
@@ -51,15 +53,15 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
 
         formTemplate.TopicId = topic.Id;
 
-        // if (createFT_dto.Tags.Count() > 0)
-        // {
-        //     dbContextWrapper.Context.FormTags.AddRange(mapper.Map<List<FormTemplateTag>>(createFT_dto.Tags));
-        // }
+        if (createFT_dto.Tags.Count() > 0)
+        {
+            dbContextWrapper.Context.FormTags.AddRange(mapper.Map<List<FormTemplateTag>>(createFT_dto.Tags));
+        }
 
-        // if (createFT_dto.AuthorizedUsers.Count() > 0)
-        // {
-        //     dbContextWrapper.Context.AuthorizedUsers.AddRange(mapper.Map<ICollection<AuthorizedUser>>(createFT_dto.AuthorizedUsers));
-        // }
+        if (createFT_dto.AuthorizedUsers.Count() > 0)
+        {
+            dbContextWrapper.Context.AuthorizedUsers.AddRange(mapper.Map<ICollection<AuthorizedUser>>(createFT_dto.AuthorizedUsers));
+        }
 
         dbContextWrapper.Context.FormTemplates.Add(formTemplate);
         var (statusCode, message) = await dbContextWrapper.SaveChangesAsync();
@@ -74,108 +76,136 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
     [HttpPut("{id}")]
     public async Task<ActionResult<FormTemplate_DTO>> UpdateFormTemplateByTemplateId(Guid id, UpdateFormTemplate_DTO updateFT_dto)
     {
-        var formTemplate = await dbContextWrapper.Context.FormTemplates
-            .Include(ft => ft.Tags).ThenInclude(ftt => ftt.UserTag)
-            .Include(ft => ft.AuthorizedUsers)
-            .Include(ft => ft.Blocks).ThenInclude(b => b.QuestionGroup)
-            .Include(ft => ft.Blocks).ThenInclude(b => b.CheckboxOptions)
-            .Include(ft => ft.Comments)
-            .Include(ft => ft.Likes)
-            .FirstOrDefaultAsync(ft => ft.Id == id);
 
-        if (formTemplate == null)
+
+        using var transaction = await dbContextWrapper.Context.Database.BeginTransactionAsync();
+        try
         {
-            return NotFound($"FormTemplate with ID {id} not found.");
-        }
+            dbContextWrapper.Context.ChangeTracker.Clear();
 
-        dbContextWrapper.Context.Entry(formTemplate).State = EntityState.Modified;
+            var formTemplate = await dbContextWrapper.Context.FormTemplates
 
-        var topic = await dbContextWrapper.Context.Topics.FirstOrDefaultAsync(t => t.TopicName == updateFT_dto.Topic);
+                .FirstOrDefaultAsync(ft => ft.Id == id);
 
-        if (topic == null)
-        {
-            return NotFound();
-        }
-
-        formTemplate.TopicId = topic.Id;
-        formTemplate.AccessControl = (Access)Enum.Parse(typeof(Access), updateFT_dto.AccessControl);
-
-
-        if (formTemplate.Tags.Count > 0)
-        {
-            dbContextWrapper.Context.FormTags.RemoveRange(formTemplate.Tags);
-            // await dbContextWrapper.Context.SaveChangesAsync();
-
-        }
-        if (updateFT_dto.Tags.Count() > 0)
-        {
-            formTemplate.Tags = mapper.Map<List<FormTemplateTag>>(updateFT_dto.Tags);
-            // await dbContextWrapper.Context.SaveChangesAsync();
-
-        }
-
-
-        if (formTemplate.AuthorizedUsers.Count > 0)
-        {
-            dbContextWrapper.Context.AuthorizedUsers.RemoveRange(formTemplate.AuthorizedUsers);
-            // await dbContextWrapper.Context.SaveChangesAsync();
-
-        }
-        if (updateFT_dto.AuthorizedUsers.Count() > 0)
-        {
-            formTemplate.AuthorizedUsers = mapper.Map<List<AuthorizedUser>>(updateFT_dto.AuthorizedUsers);
-            // await dbContextWrapper.Context.SaveChangesAsync();
-
-        }
-
-        var updatedBlockIds = updateFT_dto.Blocks.Select(b => b.Id).ToHashSet();
-        var deletedBlocks = formTemplate.Blocks.Where(b => !updatedBlockIds.Contains(b.Id)).ToList();
-        if (deletedBlocks.Count > 0)
-        {
-            dbContextWrapper.Context.Blocks.RemoveRange(deletedBlocks);
-            // await dbContextWrapper.Context.SaveChangesAsync();
-        }
-
-
-        foreach (var blockDto in updateFT_dto.Blocks)
-        {
-            var existingBlock = formTemplate.Blocks.FirstOrDefault(b => b.Id == blockDto.Id);
-            if (existingBlock != null)
+            if (formTemplate == null)
             {
-
-                existingBlock.Title = blockDto.Title ?? existingBlock.Title;
-                existingBlock.Description = blockDto.Description ?? existingBlock.Description;
-                existingBlock.IsRequired = blockDto.IsRequired;
-
-                // Update question groups
-                dbContextWrapper.Context.Questions.RemoveRange(existingBlock.QuestionGroup);
-                // await dbContextWrapper.Context.SaveChangesAsync();
-                var newQuestionGroups = mapper.Map<List<Question>>(blockDto.QuestionGroup);
-                existingBlock.QuestionGroup = newQuestionGroups;
-                // await dbContextWrapper.Context.SaveChangesAsync();
-
-                // Update checkbox options
-                dbContextWrapper.Context.CheckboxOptions.RemoveRange(existingBlock.CheckboxOptions);
-                // await dbContextWrapper.Context.SaveChangesAsync();
-                var newOptions = mapper.Map<List<CheckboxOption>>(blockDto.CheckboxOptions);
-                existingBlock.CheckboxOptions = newOptions;
-                // await dbContextWrapper.Context.SaveChangesAsync();
+                return NotFound($"FormTemplate with ID {id} not found.");
             }
-            else
+
+            var topic = await dbContextWrapper.Context.Topics
+                // .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.TopicName == updateFT_dto.Topic);
+
+            if (topic == null)
             {
-                // Add new block
-                var newBlock = mapper.Map<Block>(blockDto);
-                formTemplate.Blocks.Add(newBlock);
+                return NotFound("Topic not found.");
             }
+
+            // Update FormTemplate's basic properties
+            formTemplate.TopicId = topic.Id;
+            formTemplate.AccessControl = (Access)Enum.Parse(typeof(Access), updateFT_dto.AccessControl);
+
+            // Update Tags
+            var existingTags = await dbContextWrapper.Context.FormTags
+                .Where(ftt => ftt.FormTemplateId == id)
+                .ToListAsync();
+
+            dbContextWrapper.Context.FormTags.RemoveRange(existingTags);
+
+            var newTags = mapper.Map<List<FormTemplateTag>>(updateFT_dto.Tags);
+            foreach (var tag in newTags)
+            {
+                tag.FormTemplateId = id;
+                dbContextWrapper.Context.FormTags.Add(tag);
+            }
+
+            // Update Authorized Users
+            var existingUsers = await dbContextWrapper.Context.AuthorizedUsers
+                .Where(au => au.FormTemplateId == id)
+                .ToListAsync();
+
+            dbContextWrapper.Context.AuthorizedUsers.RemoveRange(existingUsers);
+
+            var newUsers = mapper.Map<List<AuthorizedUser>>(updateFT_dto.AuthorizedUsers);
+            foreach (var user in newUsers)
+            {
+                user.FormTemplateId = id;
+                dbContextWrapper.Context.AuthorizedUsers.Add(user);
+            }
+
+            // Update Blocks
+            var existingBlocks = await dbContextWrapper.Context.Blocks
+                .Where(b => b.ParentTemplateId == id)
+                .ToListAsync();
+
+            var updatedBlockIds = updateFT_dto.Blocks.Select(b => b.Id).ToHashSet();
+            var blocksToRemove = existingBlocks.Where(b => !updatedBlockIds.Contains(b.Id)).ToList();
+
+            dbContextWrapper.Context.Blocks.RemoveRange(blocksToRemove);
+
+            foreach (var blockDto in updateFT_dto.Blocks)
+            {
+                var block = existingBlocks.FirstOrDefault(b => b.Id == blockDto.Id);
+                if (block != null)
+                {
+                    // Update existing block
+                    block.Title = blockDto.Title ?? block.Title;
+                    block.Description = blockDto.Description ?? block.Description;
+                    block.IsRequired = blockDto.IsRequired;
+
+                    // Update questions and options
+                    var existingQuestions = await dbContextWrapper.Context.Questions
+                        .Where(q => q.BlockId == block.Id)
+                        .ToListAsync();
+                    dbContextWrapper.Context.Questions.RemoveRange(existingQuestions);
+
+                    var newQuestions = mapper.Map<List<Question>>(blockDto.QuestionGroup);
+                    foreach (var question in newQuestions)
+                    {
+                        question.BlockId = block.Id;
+                        dbContextWrapper.Context.Questions.Add(question);
+                    }
+
+                    var existingOptions = await dbContextWrapper.Context.CheckboxOptions
+                        .Where(co => co.BlockId == block.Id)
+                        .ToListAsync();
+                    dbContextWrapper.Context.CheckboxOptions.RemoveRange(existingOptions);
+
+                    var newOptions = mapper.Map<List<CheckboxOption>>(blockDto.CheckboxOptions);
+                    foreach (var option in newOptions)
+                    {
+                        option.BlockId = block.Id;
+                        dbContextWrapper.Context.CheckboxOptions.Add(option);
+                    }
+                }
+                else
+                {
+                    // Add new block
+                    var newBlock = mapper.Map<Block>(blockDto);
+                    newBlock.ParentTemplateId = id;
+                    dbContextWrapper.Context.Blocks.Add(newBlock);
+                }
+            }
+
+            // Update the FormTemplate entity
+            dbContextWrapper.Context.Entry(formTemplate).State = EntityState.Modified;
+
+            var (statusCode, message) = await dbContextWrapper.SaveChangesAsync();
+            if (statusCode != 201)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(statusCode, message);
+            }
+
+            await transaction.CommitAsync();
+            return Ok(mapper.Map<FormTemplate_DTO>(formTemplate));
         }
-
-
-        var (statusCode, message) = await dbContextWrapper.SaveChangesAsync();
-        if (statusCode != 201)
+        catch (Exception ex)
         {
-            return StatusCode(statusCode, message);
+            await transaction.RollbackAsync();
+            throw;
         }
-        return Ok(mapper.Map<FormTemplate_DTO>(formTemplate));
+
 
 
     }
