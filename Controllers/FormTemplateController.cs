@@ -13,8 +13,6 @@ namespace BackendService.Controllers;
 [Route("api/form")]
 public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper mapper) : ControllerBase
 {
-
-
     [HttpGet("{id}")]
     public async Task<ActionResult<FormTemplate_DTO>> GetFormTemplateById(Guid id)
     {
@@ -72,7 +70,7 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
         return Ok(mapper.Map<FormTemplate_DTO>(formTemplate));
     }
 
-    //updateFormTemplate -> TODO: add authorizeduserlist
+
     [HttpPut("{id}")]
     public async Task<ActionResult<FormTemplate_DTO>> UpdateFormTemplateByTemplateId(Guid id, UpdateFormTemplate_DTO updateFT_dto)
     {
@@ -100,7 +98,7 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
                 return NotFound("Topic not found.");
             }
 
-            // Update FormTemplate's basic properties
+
             formTemplate.TopicId = topic.Id;
             formTemplate.AccessControl = (Access)Enum.Parse(typeof(Access), updateFT_dto.AccessControl);
 
@@ -205,9 +203,6 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
             await transaction.RollbackAsync();
             throw;
         }
-
-
-
     }
 
     [HttpGet("all")]
