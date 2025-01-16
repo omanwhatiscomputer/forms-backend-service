@@ -14,7 +14,7 @@ public class PropExtractor
 
             for (int i = 0; i < textValues.Length; i++)
             {
-                textValues[i] = Regex.Replace(textValues[i], "[^a-zA-Z0-9]", "");
+                textValues[i] = Regex.Replace(textValues[i], "[^a-zA-Z0-9\\s\\-@%&]", "");
             }
             return string.Join(" ", textValues);
         }
