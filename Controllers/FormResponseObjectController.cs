@@ -1,5 +1,4 @@
 using System;
-using System.Security.Cryptography.X509Certificates;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BackendService.Data;
@@ -74,5 +73,18 @@ public class FormResponseObjectController(IDbContextWrapper dbContextWrapper, IM
     {
         var fts = await dbContextWrapper.Context.FormResponseObjects.Include(fro => fro.BlockResponses).ProjectTo<FormResponseObject_DTO>(mapper.ConfigurationProvider).ToListAsync();
         return Ok(fts);
+    }
+    [HttpGet("alluserresponses/{id}")]
+    public async Task<ActionResult<List<FormResponseObject_DTO>>> GetAllFormResponsesByRespondentId(Guid id)
+    {
+        var res = await dbContextWrapper.Context.FormResponseObjects.Where(fro => fro.RespondentId == id).ProjectTo<FormResponseObject_DTO>(mapper.ConfigurationProvider).ToListAsync();
+        return Ok(res);
+    }
+
+    [HttpGet("allftresponses/{id}")]
+    public async Task<ActionResult<List<FormResponseObject_DTO>>> GetAllFormResponsesByParentTemplateId(Guid id)
+    {
+        var res = await dbContextWrapper.Context.FormResponseObjects.Include(fro => fro.BlockResponses).Where(fro => fro.ParentTemplateId == id).ProjectTo<FormResponseObject_DTO>(mapper.ConfigurationProvider).ToListAsync();
+        return Ok(res);
     }
 }
