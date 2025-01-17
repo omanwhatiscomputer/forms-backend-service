@@ -20,7 +20,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins("http://localhost:3000")//("https://forms-frontend-psi.vercel.app")
+            builder.WithOrigins("https://forms-frontend-psi.vercel.app")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials();
