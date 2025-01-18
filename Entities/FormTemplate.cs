@@ -15,6 +15,7 @@ public class FormTemplate
 
     public string Description { get; set; }
     public string BannerUrl { get; set; } = "placeholderImageUrl";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Guid TopicId { get; set; }
     public Topic Topic { get; set; } = null!;
@@ -24,6 +25,5 @@ public class FormTemplate
     public List<Comment> Comments { get; set; } = [];
     [Required]
     public List<Block> Blocks { get; set; } = new List<Block>();
-
     public byte[] RowVersion { get; set; }
 }

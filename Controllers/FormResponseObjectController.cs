@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BackendService.Data;
@@ -86,5 +87,70 @@ public class FormResponseObjectController(IDbContextWrapper dbContextWrapper, IM
     {
         var res = await dbContextWrapper.Context.FormResponseObjects.Include(fro => fro.BlockResponses).Where(fro => fro.ParentTemplateId == id).ProjectTo<FormResponseObject_DTO>(mapper.ConfigurationProvider).ToListAsync();
         return Ok(res);
+    }
+
+    [HttpGet("formresponseanalytics/{blockResponseId}/{formId}/{blockId}")]
+    public async Task<ActionResult> GetFormTemplateResponseAnalytics(Guid blockResponseId, Guid formId, Guid blockId)
+    {
+        var block = await dbContextWrapper.Context.Blocks.FirstOrDefaultAsync(b => b.Id == blockId && b.ParentTemplateId == formId);
+        var blockResponses = await dbContextWrapper.Context.BlockResponses.Where(br => br.Id == blockResponseId && br.BlockId == blockId && br.ParentTemplateId == formId).ProjectTo<BlockResponse_DTO>(mapper.ConfigurationProvider).ToListAsync();
+
+        if (block.BlockType == InputType.Integer)
+        {
+            var arr = blockResponses.Select(br => float.Parse(br.Content));
+            var result = new { value = arr.Average().ToString(), type = "Average" };
+            return Ok(result);
+        }
+        else if (block.BlockType == InputType.SingleLine)
+        {
+            var arr = blockResponses.Select(br => br.Content.ToLower().Trim());
+            var result = new
+            {
+                value = arr.GroupBy(v => v)
+                    .OrderByDescending(g => g.Count())
+                    .First()
+                    .Key,
+                type = "Mode"
+            };
+            return Ok(new { value = result, type = "Mode" });
+
+        }
+        else if (block.BlockType == InputType.MultiLine)
+        {
+            var arr = blockResponses.Select(br => br.Content.ToLower().Trim().Split(" "));
+            string[] words = [];
+            foreach (var item in arr)
+            {
+                words = words.Concat(item).ToArray();
+            }
+            string res = JsonSerializer.Serialize(words.GroupBy(w => w).ToDictionary(group => group.Key, group => group.Count()).OrderByDescending(kvp => kvp.Value).Take(5).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+            return Ok(new { value = res, type = "Top Words" });
+        }
+        else if (block.BlockType == InputType.CheckboxSingle)
+        {
+            var arr = blockResponses.Select(br => br.Content);
+            var result = new
+            {
+                value = arr.GroupBy(v => v)
+                    .OrderByDescending(g => g.Count())
+                    .First()
+                    .Key,
+                type = "Mode"
+            };
+            return Ok(new { value = result, type = "Mode" });
+        }
+        else
+        {
+            var arr = blockResponses.Select(br => JsonSerializer.Deserialize<List<string>>(br.Content));
+            string[] choices = [];
+            foreach (var item in arr)
+            {
+                choices = choices.Concat(item).ToArray();
+            }
+            string res = JsonSerializer.Serialize(choices.GroupBy(w => w).ToDictionary(group => group.Key, group => group.Count()).OrderByDescending(kvp => kvp.Value).Take(5).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+            return Ok(new { value = res, type = "Top Choices" });
+        }
+
+
     }
 }
