@@ -10,7 +10,7 @@ public class FormTemplate_DTO
     public string AccessControl { get; set; }
     public ICollection<AuthorizedUser_DTO> AuthorizedUsers { get; set; } = new List<AuthorizedUser_DTO>();
     public string Title { get; set; }
-
+    public DateTime CreatedAt { get; set; }
     public string Description { get; set; }
     public string BannerUrl { get; set; }
     public Topic_DTO Topic { get; set; }

@@ -42,7 +42,7 @@ public class UserController(IDbContextWrapper dbContextWrapper, IMapper mapper, 
     [HttpPost]
     public async Task<ActionResult<User_DTO>> Register(CreateUser_DTO createU_dto)
     {
-        
+
         byte[] salt;
         string passwordHash = PasswordHelpers.HashPassword(createU_dto.Password, out salt);
         var user = mapper.Map<User>(createU_dto);
@@ -52,7 +52,8 @@ public class UserController(IDbContextWrapper dbContextWrapper, IMapper mapper, 
         dbContextWrapper.Context.Users.Add(user);
 
         var (statusCode, message) = await dbContextWrapper.SaveChangesAsync();
-        if(statusCode != 201){
+        if (statusCode != 201)
+        {
             return StatusCode(statusCode, message);
         }
 
@@ -61,7 +62,7 @@ public class UserController(IDbContextWrapper dbContextWrapper, IMapper mapper, 
 
         var user_dto = mapper.Map<User_DTO>(user);
         // return Ok(user_dto);
-        return CreatedAtAction(nameof(Login), new {user.UserId}, user_dto);
+        return CreatedAtAction(nameof(Login), new { user.UserId }, user_dto);
     }
 
 
@@ -70,15 +71,16 @@ public class UserController(IDbContextWrapper dbContextWrapper, IMapper mapper, 
     public async Task<ActionResult<User_DTO>> Login(LogIn_DTO logIn_dto)
     {
         var user = await dbContextWrapper.Context.Users.FirstOrDefaultAsync(x => x.Email == logIn_dto.Email);
-        if(user == null) return NotFound("User not found!");
+        if (user == null) return NotFound("User not found!");
         if (!PasswordHelpers.HashesMatch(logIn_dto.Password, user.PasswordSalt, user.PasswordHash))
         {
             return Unauthorized("Invalid Credentials");
         }
-        
+
         string token = UserHelpers.GetUserToken(user, config);
 
-        if (!PasswordHelpers.PasswordSaltIsValid(user.PasswordSaltRenewedAt, config)){
+        if (!PasswordHelpers.PasswordSaltIsValid(user.PasswordSaltRenewedAt, config))
+        {
             byte[] newSalt;
             string newPasswordHash = PasswordHelpers.HashPassword(logIn_dto.Password, out newSalt);
             user.PasswordSalt = PasswordHelpers.SaltConvertBytes2HexString(newSalt);
@@ -86,15 +88,15 @@ public class UserController(IDbContextWrapper dbContextWrapper, IMapper mapper, 
             user.PasswordSaltRenewedAt = DateTime.UtcNow;
         }
 
-        
+
 
         var result = await dbContextWrapper.Context.SaveChangesAsync() > 0;
-        if(!result) return BadRequest("Could not save changes to the DB.");
+        if (!result) return BadRequest("Could not save changes to the DB.");
 
         UserHelpers.AppendCookies(Response, config, user, token);
 
         var user_dto = mapper.Map<User_DTO>(user);
-        
+
 
         return Ok(user_dto);
     }
@@ -105,15 +107,17 @@ public class UserController(IDbContextWrapper dbContextWrapper, IMapper mapper, 
     public async Task<ActionResult<User_DTO>> UpdateUserById(Guid id, UpdateUser_DTO updateU_dto)
     {
         var user = await dbContextWrapper.Context.Users.FirstOrDefaultAsync(u => u.UserId == id);
-        if(user==null) return NotFound();
+        if (user == null) return NotFound();
 
         mapper.Map<UpdateUser_DTO, User>(updateU_dto, user);
-        if (updateU_dto.FirstName != null || updateU_dto.LastName != null){
+        if (updateU_dto.FirstName != null || updateU_dto.LastName != null)
+        {
             user.NormalizedName = (user.FirstName + " " + user.LastName).Trim();
         }
 
         var (statusCode, message) = await dbContextWrapper.SaveChangesAsync();
-        if(statusCode != 201){
+        if (statusCode != 201)
+        {
             return StatusCode(statusCode, message);
         }
         var user_dto = mapper.Map<User_DTO>(user);
@@ -126,7 +130,7 @@ public class UserController(IDbContextWrapper dbContextWrapper, IMapper mapper, 
     public async Task<ActionResult<User_DTO>> GetUserById(Guid id)
     {
         var user = await dbContextWrapper.Context.Users.Include(u => u.Tags).Include(u => u.FormTemplates).FirstOrDefaultAsync(x => x.UserId == id);
-        if(user == null) return NotFound();
+        if (user == null) return NotFound();
         var user_dto = mapper.Map<User_DTO>(user);
         return Ok(user_dto);
     }
@@ -136,6 +140,13 @@ public class UserController(IDbContextWrapper dbContextWrapper, IMapper mapper, 
     {
         var users = await dbContextWrapper.Context.Users.ProjectTo<UserIndex_DTO>(mapper.ConfigurationProvider).ToListAsync();
         return Ok(users);
+    }
+    [HttpGet("useridx/{id}")]
+    public async Task<ActionResult<UserIndex_DTO>> GetUserIdxById(Guid id)
+    {
+        var user = await dbContextWrapper.Context.Users.FirstOrDefaultAsync(u => u.UserId == id);
+        if (user == null) return NotFound();
+        return Ok(mapper.Map<UserIndex_DTO>(user));
     }
 
 }

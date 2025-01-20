@@ -4,6 +4,7 @@ using BackendService.DTOs;
 using BackendService.DTOs.AuthorizedUser;
 using BackendService.DTOs.AuthorizedUSer;
 using BackendService.DTOs.CheckboxOption;
+using BackendService.DTOs.FormResponseObject;
 using BackendService.DTOs.FormTemplate;
 using BackendService.DTOs.User;
 using BackendService.Entities;
@@ -98,8 +99,15 @@ public class MappingProfiles : Profile
 
         CreateMap<FormTemplate, FormTemplateIndex_DTO>()
             .ForMember(fti => fti.FormTemplateId, opt => opt.MapFrom(src => src.Id.ToString()))
-            .ForMember(fti => fti.Description, opt => opt.MapFrom(src => PropExtractor.CollectTextProperties(src.Description)));
+            .ForMember(fti => fti.Description, opt => opt.MapFrom(src => PropExtractor.CollectTextProperties(src.Description)))
+            .ForMember(fti => fti.AuthorFullName, opt => opt.MapFrom(src => src.Author.NormalizedName))
+            .ForMember(dest => dest.AccessControl,
+                            opt => opt.MapFrom(src => src.AccessControl.ToString()));
         CreateMap<User, UserIndex_DTO>().ForMember(ui => ui.UserId, opt => opt.MapFrom(s => s.UserId.ToString()));
+        CreateMap<FormResponseObject, FormResponseObjectIndex_DTO>()
+            .ForMember(fro => fro.Title, opt => opt.MapFrom(src => src.ParentTemplate.Title))
+            .ForMember(fro => fro.RespondentFullName, opt => opt.MapFrom(src => src.Respondent.NormalizedName))
+            .ForMember(fro => fro.RespondentEmail, opt => opt.MapFrom(src => src.Respondent.Email));
     }
 }
 

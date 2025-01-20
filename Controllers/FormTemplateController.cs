@@ -51,15 +51,15 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
 
         formTemplate.TopicId = topic.Id;
 
-        if (createFT_dto.Tags.Count() > 0)
-        {
-            dbContextWrapper.Context.FormTags.AddRange(mapper.Map<List<FormTemplateTag>>(createFT_dto.Tags));
-        }
+        // if (createFT_dto.Tags.Count() > 0)
+        // {
+        //     dbContextWrapper.Context.FormTags.AddRange(mapper.Map<List<FormTemplateTag>>(createFT_dto.Tags));
+        // }
 
-        if (createFT_dto.AuthorizedUsers.Count() > 0)
-        {
-            dbContextWrapper.Context.AuthorizedUsers.AddRange(mapper.Map<ICollection<AuthorizedUser>>(createFT_dto.AuthorizedUsers));
-        }
+        // if (createFT_dto.AuthorizedUsers.Count() > 0)
+        // {
+        //     dbContextWrapper.Context.AuthorizedUsers.AddRange(mapper.Map<ICollection<AuthorizedUser>>(createFT_dto.AuthorizedUsers));
+        // }
 
         dbContextWrapper.Context.FormTemplates.Add(formTemplate);
         var (statusCode, message) = await dbContextWrapper.SaveChangesAsync();
@@ -209,6 +209,27 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
     public async Task<ActionResult<List<FormTemplateIndex_DTO>>> GetAllFormTemplates()
     {
         var fts = await dbContextWrapper.Context.FormTemplates.ProjectTo<FormTemplateIndex_DTO>(mapper.ConfigurationProvider).ToListAsync();
+        return Ok(fts);
+    }
+    [HttpGet("public")]
+    public async Task<ActionResult<List<FormTemplateIndex_DTO>>> GetAllPublicFormTemplates()
+    {
+        var fts = await dbContextWrapper.Context.FormTemplates.Where(ft => ft.AccessControl == Access.PublicAccess).ProjectTo<FormTemplateIndex_DTO>(mapper.ConfigurationProvider).ToListAsync();
+        return Ok(fts);
+    }
+    [HttpGet("private")]
+    public async Task<ActionResult<List<FormTemplateIndex_DTO>>> GetAllPrivateFormTemplates()
+    {
+        var fts = await dbContextWrapper.Context.FormTemplates.Where(ft => ft.AccessControl == Access.RestrictedAccess).ProjectTo<FormTemplateIndex_DTO>(mapper.ConfigurationProvider).ToListAsync();
+        return Ok(fts);
+    }
+    [HttpGet("private/{id}")]
+    public async Task<ActionResult<List<FormTemplateIndex_DTO>>> GetAllPrivateFormTemplatesByAuthorizedUserId(Guid id)
+    {
+        var fts = await dbContextWrapper.Context.FormTemplates.Include(ft => ft.AuthorizedUsers)
+            .Where(ft => ft.AccessControl == Access.RestrictedAccess && ft.AuthorizedUsers.Any(au => au.UserId == id))
+            .ProjectTo<FormTemplateIndex_DTO>(mapper.ConfigurationProvider)
+            .ToListAsync();
         return Ok(fts);
     }
 }

@@ -4,6 +4,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BackendService.Data;
 using BackendService.DTOs;
+using BackendService.DTOs.FormResponseObject;
 using BackendService.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -89,11 +90,11 @@ public class FormResponseObjectController(IDbContextWrapper dbContextWrapper, IM
         return Ok(res);
     }
 
-    [HttpGet("formresponseanalytics/{blockResponseId}/{formId}/{blockId}")]
-    public async Task<ActionResult> GetFormTemplateResponseAnalytics(Guid blockResponseId, Guid formId, Guid blockId)
+    [HttpGet("formresponseanalytics/{formId}/{blockId}")]
+    public async Task<ActionResult> GetFormTemplateResponseAnalytics(Guid formId, Guid blockId)
     {
         var block = await dbContextWrapper.Context.Blocks.FirstOrDefaultAsync(b => b.Id == blockId && b.ParentTemplateId == formId);
-        var blockResponses = await dbContextWrapper.Context.BlockResponses.Where(br => br.Id == blockResponseId && br.BlockId == blockId && br.ParentTemplateId == formId).ProjectTo<BlockResponse_DTO>(mapper.ConfigurationProvider).ToListAsync();
+        var blockResponses = await dbContextWrapper.Context.BlockResponses.Where(br => br.BlockId == blockId && br.ParentTemplateId == formId).ProjectTo<BlockResponse_DTO>(mapper.ConfigurationProvider).ToListAsync();
 
         if (block.BlockType == InputType.Integer)
         {
@@ -110,7 +111,7 @@ public class FormResponseObjectController(IDbContextWrapper dbContextWrapper, IM
                     .OrderByDescending(g => g.Count())
                     .First()
                     .Key,
-                type = "Mode"
+                type = "Popular answer"
             };
             return Ok(new { value = result, type = "Mode" });
 
@@ -135,9 +136,9 @@ public class FormResponseObjectController(IDbContextWrapper dbContextWrapper, IM
                     .OrderByDescending(g => g.Count())
                     .First()
                     .Key,
-                type = "Mode"
+                type = "Popular answer"
             };
-            return Ok(new { value = result, type = "Mode" });
+            return Ok(result);
         }
         else
         {
@@ -150,7 +151,11 @@ public class FormResponseObjectController(IDbContextWrapper dbContextWrapper, IM
             string res = JsonSerializer.Serialize(choices.GroupBy(w => w).ToDictionary(group => group.Key, group => group.Count()).OrderByDescending(kvp => kvp.Value).Take(5).ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
             return Ok(new { value = res, type = "Top Choices" });
         }
-
-
+    }
+    [HttpGet("allftresponseindexes/{id}")]
+    public async Task<ActionResult<List<FormResponseObjectIndex_DTO>>> GetAllFormResponseIndexesByParentTemplateId(Guid id)
+    {
+        var res = await dbContextWrapper.Context.FormResponseObjects.Where(fro => fro.ParentTemplateId == id).ProjectTo<FormResponseObjectIndex_DTO>(mapper.ConfigurationProvider).ToListAsync();
+        return Ok(res);
     }
 }
