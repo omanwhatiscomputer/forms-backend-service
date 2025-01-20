@@ -90,6 +90,9 @@ public class FormTemplateController(IDbContextWrapper dbContextWrapper, IMapper 
                 return NotFound($"FormTemplate with ID {id} not found.");
             }
 
+            formTemplate.Description = updateFT_dto.Description;
+            formTemplate.Title = updateFT_dto.Title;
+
             var topic = await dbContextWrapper.Context.Topics
                 .FirstOrDefaultAsync(t => t.TopicName == updateFT_dto.Topic);
 
